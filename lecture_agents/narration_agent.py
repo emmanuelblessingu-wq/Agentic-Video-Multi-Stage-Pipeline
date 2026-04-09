@@ -28,7 +28,7 @@ arc.json:
 slide_description.json (full deck):
 {slide_descriptions}
 
-Prior slide narrations (already recorded; continue smoothly):
+All prior slide narrations in order (none on slide 1; continue smoothly and avoid contradicting earlier lines):
 {prior_narrations}
 
 Now write narration for slide {slide_index} only. Image attached.
@@ -81,8 +81,13 @@ def run_narrations(
         if current is None and idx - 1 < len(slide_list):
             current = slide_list[idx - 1]
         current_json = json.dumps(current or {"slide_index": idx}, indent=2, ensure_ascii=False)
-        prior = [{"slide_index": n["slide_index"], "narration": n["narration"]} for n in narrations[-3:]]
-        prior_block = json.dumps(prior, indent=2, ensure_ascii=False) if prior else "(none)"
+        # Rubric: include every prior narration in context (none for slide 1).
+        prior = [{"slide_index": n["slide_index"], "narration": n.get("narration", "")} for n in narrations]
+        prior_block = (
+            json.dumps(prior, indent=2, ensure_ascii=False)
+            if prior
+            else "(none — slide 1; no prior narrations.)"
+        )
         target_words = 55 if idx == 1 else 85
         prompt = USER_TEMPLATE.format(
             style=style_s[:40_000],

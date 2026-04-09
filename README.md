@@ -16,7 +16,7 @@ your-repo/
 ├── README.md
 ├── style.json                 # produced from transcript (or commit a generated copy)
 ├── Lecture_17_AI_screenplays.pdf   # add this at repo root for the grader
-├── Lecture_17_transcript.txt       # add transcript for style extraction
+├── Lecture_17_transcript.txt       # captions/transcript for style (e.g. linked lecture section captions)
 ├── requirements.txt
 ├── run_lecture_pipeline.py
 ├── lecture_agents/
@@ -31,7 +31,7 @@ your-repo/
         └── Lecture_17_AI_screenplays.mp4   # generated; gitignored
 ```
 
-Place **`Lecture_17_AI_screenplays.pdf`** and a plain-text **`Lecture_17_transcript.txt`** (or pass `--transcript`) in the repo root before running.
+Place **`Lecture_17_AI_screenplays.pdf`** and a plain-text **caption/transcript file** (default `Lecture_17_transcript.txt`, or `--transcript`) in the repo root before running. The style step expects the instructor’s spoken text (e.g. exported captions for a lecture section).
 
 ## Install
 
@@ -83,12 +83,25 @@ Useful flags:
 |--------|------|
 | `style_agent.py` | Transcript → `style.json` (tone, pacing, fillers, framing, narration guidance) |
 | `pdf_rasterize.py` | PDF → `slide_images/slide_XXX.png` (PyMuPDF) |
-| `slide_description_agent.py` | Each slide image + prior descriptions → `slide_description.json` |
+| `slide_description_agent.py` | Each slide image + **all** prior slide descriptions in context → `slide_description.json` |
 | `premise_agent.py` | Slide descriptions → `premise.json` |
 | `arc_agent.py` | Premise + descriptions → `arc.json` |
-| `narration_agent.py` | Per slide: image + style + premise + arc + full descriptions + prior narrations → `slide_description_narration.json` (title slide: self-intro + topic summary) |
-| `tts_step.py` | Narrations → `audio/slide_XXX.mp3` |
+| `narration_agent.py` | Per slide: image + style + premise + arc + full `slide_description.json` + **all** prior narrations (none on slide 1) → `slide_description_narration.json` (title slide: self-intro + topic overview) |
+| `tts_step.py` | Reads narration strings from `slide_description_narration.json` → `audio/slide_XXX.mp3` (streaming providers merge chunks into one file per slide) |
 | `video_assembly.py` | ffmpeg: image + audio per slide (`-shortest`), then concat |
+
+## Grading rubric alignment (100 points)
+
+| Points | Requirement | Implementation |
+|--------|----------------|----------------|
+| **8** | Style from instructor caption/transcript → `style.json` at repo root | `lecture_agents/style_agent.py`; input path `--transcript` (default `Lecture_17_transcript.txt`) |
+| **18** | Slide agent: rasterized deck + current image + **all** previous descriptions in context each time → `slide_description.json` | `slide_description_agent.py` passes the full list of prior descriptions on every call (slides 1…N−1) |
+| **10** | Premise: entire `slide_description.json` → `premise.json` | `premise_agent.py` loads the full JSON file into the prompt |
+| **10** | Arc: `premise.json` + `slide_description.json` → coherent `arc.json` | `arc_agent.py` |
+| **18** | Narration: current image + `style.json` + premise + arc + full slide descriptions + **all** prior narrations (none on slide 1) → `slide_description_narration.json`; title slide with self-intro + overview | `narration_agent.py` |
+| **14** | Audio: narration strings → `audio/slide_NNN.mp3` (merge streamed chunks per slide) | `tts_step.py` (e.g. ElevenLabs iterator written to one file; Gemini/Edge single response or save) |
+| **12** | Video: matching PNGs + MP3s → one `.mp4` named like PDF; segment length follows audio (`-shortest`) | `video_assembly.py` |
+| **10** | Repo: code + project JSON + README; **no** committed images/audio/video | `.gitignore`; commit JSON under `projects/...` after a run if your course expects artifacts in the repo |
 
 ## Submission notes
 

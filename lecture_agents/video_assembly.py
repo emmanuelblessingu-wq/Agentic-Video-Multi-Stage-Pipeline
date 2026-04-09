@@ -17,7 +17,7 @@ def _run(cmd: list[str], *, cwd: Path | None = None) -> None:
 
 
 def mux_slide(image: Path, audio: Path, segment_out: Path) -> None:
-    """Still image + audio; duration follows audio (-shortest drops silent tail on video loop)."""
+    """Still image + audio; `-shortest` ends the segment when audio ends (no long silent tail)."""
     segment_out.parent.mkdir(parents=True, exist_ok=True)
     cmd = [
         "ffmpeg",

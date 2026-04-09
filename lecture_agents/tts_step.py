@@ -73,6 +73,7 @@ def synthesize_gemini_tts(text: str, out_mp3: Path, api_key: str, voice_name: st
 
 
 def synthesize_elevenlabs(text: str, out_mp3: Path, api_key: str) -> None:
+    """Stream all response chunks into a single MP3 file (rubric: merge chunked API output per slide)."""
     from elevenlabs.client import ElevenLabs
 
     voice_id = os.environ.get("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")

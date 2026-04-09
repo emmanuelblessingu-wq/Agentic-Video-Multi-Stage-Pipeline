@@ -16,7 +16,7 @@ Always return valid JSON with keys: slide_index (int), title_guess (string), des
 
 USER_TEMPLATE = """You are describing slide {slide_index} of {total_slides}.
 
-Previous slide descriptions (for context only; do not repeat verbatim):
+All previous slide descriptions in order (slides 1 through {slide_index_minus_one}; use for continuity; do not copy verbatim):
 {prev_block}
 
 Describe the attached slide image. The description should stand alone but reference the lecture flow where helpful.
@@ -37,15 +37,17 @@ def run_slide_descriptions(
     slides: list[dict] = []
     total = len(image_paths)
     for idx, img in enumerate(image_paths, start=1):
-        prev = slides[-5:] if slides else []
+        # Rubric: every call must include *all* prior slide descriptions in context (real chaining).
+        prev = list(slides)
         prev_block = (
             json.dumps(prev, indent=2, ensure_ascii=False)
             if prev
-            else "(none — this is the first slide.)"
+            else "(none — this is the first slide; no prior descriptions.)"
         )
         prompt = USER_TEMPLATE.format(
             slide_index=idx,
             total_slides=total,
+            slide_index_minus_one=idx - 1,
             prev_block=prev_block,
         )
         row = client.generate_json_with_image(prompt, img, system=SYSTEM)

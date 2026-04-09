@@ -11,11 +11,11 @@ from lecture_agents.gemini_client import GeminiClient
 logger = logging.getLogger(__name__)
 
 STYLE_SYSTEM = """You are an expert in discourse analysis and instructional communication.
-Given a lecture transcript, extract a structured profile of how the instructor speaks.
+Given lecture captions or a full transcript (e.g. exported section captions), extract a structured profile of how the instructor speaks.
 Be specific and grounded in the transcript (quote short examples where helpful).
 Output must be valid JSON matching the user's schema request exactly."""
 
-STYLE_PROMPT = """Analyze the full lecture transcript below and return a JSON object with these keys:
+STYLE_PROMPT = """Analyze the full caption/transcript text below (instructor lecture speech only) and return a JSON object with these keys:
 - tone: string — overall vocal/semantic tone (e.g. conversational, formal, enthusiastic).
 - pacing: string — how fast ideas move; use of pauses, digressions, density.
 - fillers_and_hedges: array of strings — recurring fillers or hedges if any.
@@ -26,7 +26,7 @@ STYLE_PROMPT = """Analyze the full lecture transcript below and return a JSON ob
 - example_phrases: array of strings — 3–8 short verbatim phrases that exemplify their voice.
 - narration_guidance: string — concise instructions for a narrator to imitate this style credibly.
 
-Transcript:
+Captions / transcript:
 ---
 {transcript}
 ---
