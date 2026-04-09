@@ -16,6 +16,11 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    load_dotenv = None  # type: ignore[misc, assignment]
+
 from lecture_agents.arc_agent import run_arc
 from lecture_agents.config import PipelineConfig
 from lecture_agents.gemini_client import GeminiClient
@@ -86,6 +91,9 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
     _setup_logging(args.verbose)
+
+    if load_dotenv is not None:
+        load_dotenv(REPO_ROOT / ".env")
 
     cfg = PipelineConfig.from_env()
     if args.tts_engine:

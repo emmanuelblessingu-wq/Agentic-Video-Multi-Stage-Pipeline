@@ -59,9 +59,11 @@ pip install -r requirements.txt
 From the repository root:
 
 ```bash
-export GOOGLE_API_KEY=...   # or GEMINI_API_KEY
+export GOOGLE_API_KEY=...   # or GEMINI_API_KEY (optional if set in `.env`)
 python run_lecture_pipeline.py
 ```
+
+If you use a `.env` file in the repo root (`GOOGLE_API_KEY=...`), run `pip install -r requirements.txt` (includes `python-dotenv`); the entrypoint loads it automatically.
 
 This will:
 
