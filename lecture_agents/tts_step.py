@@ -152,8 +152,9 @@ def synthesize_all_slides(
     engine: str | None = None,
 ) -> list[Path]:
     audio_dir.mkdir(parents=True, exist_ok=True)
+    ordered = sorted(narrations, key=lambda r: int(r.get("slide_index", 0)))
     paths: list[Path] = []
-    for row in narrations:
+    for row in ordered:
         idx = int(row["slide_index"])
         text = (row.get("narration") or "").strip()
         if not text:
