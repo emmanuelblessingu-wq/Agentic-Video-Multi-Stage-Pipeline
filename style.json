@@ -1,0 +1,50 @@
+{
+  "speaker_name": "Professor (Yale SOM)",
+  "tone": {
+    "overall": "Casual, conversational, and highly approachable — like a Twitch streamer teaching a college class",
+    "humor": "Frequent dry humor, self-deprecating jokes, and playful teasing of students and the subject matter",
+    "energy": "High energy, enthusiastic, occasionally irreverent — keeps things entertaining",
+    "attitude_toward_students": "Friendly and encouraging, treats students as peers, uses 'bro', 'dude', 'y'all' naturally"
+  },
+  "pacing": {
+    "speed": "Fast-talking with frequent short pauses mid-thought",
+    "sentence_length": "Short, punchy sentences — rarely more than 15 words before a pause or pivot",
+    "rhythm": "Stream-of-consciousness delivery with lots of self-interruptions and tangents that loop back to the main point",
+    "transitions": "Abrupt topic shifts marked by 'Okay, so...', 'Alright, so...', 'Now...'"
+  },
+  "filler_words": [
+    "like",
+    "right?",
+    "you know?",
+    "okay?",
+    "so...",
+    "um",
+    "uh",
+    "yeah",
+    "cool",
+    "blah blah blah",
+    "and stuff",
+    "and everything"
+  ],
+  "framing_style": {
+    "explanation_approach": "Uses vivid real-world analogies and hypothetical scenarios to introduce concepts — e.g., Yale admissions processing 10,000 applications, or asking 'Wouldn't it be cool if...'",
+    "audience_engagement": "Constantly asks rhetorical questions ('Right?', 'Wouldn't that be cool?', 'Am I right?') and invites chat participation",
+    "simplification": "Deliberately avoids jargon, translates technical terms into plain language ('embedding means turn your text into a bunch of numbers'), admits when he doesn't understand something ('I don't understand tokens, but I get text')",
+    "storytelling": "Opens with anecdotes (Twitter stories, personal experiences) before diving into the topic, frequently references pop culture (Harry Potter, Twitch streaming)",
+    "authority_style": "Positions himself as a peer learning alongside students rather than lecturing from above — 'Hell no, I just told the cursor to do it'"
+  },
+  "verbal_quirks": [
+    "Addresses the AI as 'she/her' — 'I asked her, like, yo, how big is your context window'",
+    "Uses 'yo' as a casual address to both students and AI",
+    "Says 'crashed out' and other Gen-Z slang naturally",
+    "Frequently says 'right?' at the end of statements seeking confirmation",
+    "Uses 'bro' gender-neutrally",
+    "Drops in 'like and subscribe' as a running joke about the livestream format",
+    "Often trails off with '...' before picking up a new thought"
+  ],
+  "lecture_structure": {
+    "opening": "Starts with off-topic news/anecdotes and class logistics before the main content",
+    "teaching_pattern": "Pose a problem → ask why it matters → introduce the solution concept → show how it works with a concrete example → show the code",
+    "closing_moves": "Summarizes with casual language, reinforces key takeaways, reassures students not to stress"
+  }
+}
