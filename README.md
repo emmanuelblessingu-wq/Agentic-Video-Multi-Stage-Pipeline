@@ -112,3 +112,5 @@ Useful flags:
 - Submit the **GitHub repo URL** on Canvas.
 - **Do not** commit PNG, MP3, or MP4 files; `.gitignore` excludes them under `projects/`.
 - Include the **PDF** at the repo root so the grader can run the script without searching for the deck.
+
+Public repo: [emmanuelblessingu-wq/Agentic-Video-Multi-Stage-Pipeline](https://github.com/emmanuelblessingu-wq/Agentic-Video-Multi-Stage-Pipeline).
