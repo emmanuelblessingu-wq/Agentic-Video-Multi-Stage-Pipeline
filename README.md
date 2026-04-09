@@ -103,6 +103,8 @@ Useful flags:
 | **12** | Video: matching PNGs + MP3s → one `.mp4` named like PDF; segment length follows audio (`-shortest`) | `video_assembly.py` |
 | **10** | Repo: code + project JSON + README; **no** committed images/audio/video | `.gitignore`; commit JSON under `projects/...` after a run if your course expects artifacts in the repo |
 
+*Very long decks:* passing every prior description and narration grows prompts quickly; if the API hits context limits, use a larger-context Gemini model via `GEMINI_AGENT_MODEL` or split the assignment deck per course instructions.
+
 ## Submission notes
 
 - Submit the **GitHub repo URL** on Canvas.
