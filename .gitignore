@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+.env
+.venv/
+venv/
+
+# Generated media (do not commit per assignment)
+projects/*/slide_images/
+projects/*/audio/
+projects/**/*.mp4
+*.mp3
+*.mp4
+*.wav
+
+# OS
+.DS_Store
