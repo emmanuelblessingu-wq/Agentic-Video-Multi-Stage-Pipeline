@@ -75,7 +75,7 @@ This will:
 Useful flags:
 
 - `--pdf` / `--transcript` — alternate inputs
-- `--project-dir path` — reuse an existing project folder
+- `--project-dir path` — reuse an existing project folder (required to **resume** after a crash or 503: slide descriptions and narrations are **checkpointed** to JSON after each slide)
 - `--skip-tts` — stop after `slide_description_narration.json`
 - `--skip-video` — generate MP3s only
 - `--tts-engine edge` — force free Edge TTS

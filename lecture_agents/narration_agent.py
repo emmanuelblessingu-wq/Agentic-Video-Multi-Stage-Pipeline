@@ -49,6 +49,35 @@ def _load_json(path: Path) -> dict | list:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _write_narration_checkpoint(out_path: Path, narrations: list[dict]) -> None:
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(
+        json.dumps({"slides": narrations}, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _load_existing_narrations(out_path: Path) -> list[dict]:
+    if not out_path.is_file():
+        return []
+    try:
+        data = json.loads(out_path.read_text(encoding="utf-8"))
+        raw = data.get("slides", data) if isinstance(data, dict) else data
+        if not isinstance(raw, list):
+            return []
+        for i, row in enumerate(raw, start=1):
+            if not isinstance(row, dict) or row.get("slide_index") != i:
+                logger.warning(
+                    "Checkpoint %s has bad slide_index; ignoring checkpoint.",
+                    out_path.name,
+                )
+                return []
+        return raw
+    except (json.JSONDecodeError, OSError) as e:
+        logger.warning("Could not read %s (%s); starting narrations from scratch.", out_path, e)
+        return []
+
+
 def run_narrations(
     image_paths: list[Path],
     slide_desc_path: Path,
@@ -60,9 +89,21 @@ def run_narrations(
     *,
     force: bool = False,
 ) -> list[dict]:
+    total = len(image_paths)
     if out_path.is_file() and not force:
-        data = json.loads(out_path.read_text(encoding="utf-8"))
-        return data.get("slides", data) if isinstance(data, dict) else data
+        narrations = _load_existing_narrations(out_path)
+        if len(narrations) >= total:
+            logger.info("Using complete %s (%s slides).", out_path.name, total)
+            return narrations
+        if narrations:
+            logger.info(
+                "Resuming narrations: %s slides done, continuing at %s/%s",
+                len(narrations),
+                len(narrations) + 1,
+                total,
+            )
+    else:
+        narrations = []
 
     style_s = style_path.read_text(encoding="utf-8")
     premise_s = premise_path.read_text(encoding="utf-8")
@@ -73,10 +114,8 @@ def run_narrations(
     if not isinstance(slide_list, list):
         slide_list = []
 
-    narrations: list[dict] = []
-    total = len(image_paths)
-
-    for idx, img in enumerate(image_paths, start=1):
+    for idx in range(len(narrations) + 1, total + 1):
+        img = image_paths[idx - 1]
         current = next((s for s in slide_list if s.get("slide_index") == idx), None)
         if current is None and idx - 1 < len(slide_list):
             current = slide_list[idx - 1]
@@ -105,9 +144,8 @@ def run_narrations(
         desc_text = (current or {}).get("description") if isinstance(current, dict) else None
         row["slide_description"] = desc_text or ""
         narrations.append(row)
-        logger.info("Narration slide %s/%s", idx, total)
+        _write_narration_checkpoint(out_path, narrations)
+        logger.info("Narration slide %s/%s (checkpoint saved)", idx, total)
 
-    out_payload = {"slides": narrations}
-    out_path.write_text(json.dumps(out_payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     logger.info("Wrote %s", out_path)
     return narrations

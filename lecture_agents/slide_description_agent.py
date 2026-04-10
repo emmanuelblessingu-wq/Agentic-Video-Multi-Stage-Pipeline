@@ -23,6 +23,35 @@ Describe the attached slide image. The description should stand alone but refere
 Return JSON only."""
 
 
+def _write_slide_checkpoint(out_json: Path, slides: list[dict]) -> None:
+    out_json.parent.mkdir(parents=True, exist_ok=True)
+    out_json.write_text(
+        json.dumps({"slides": slides}, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _load_existing_slides(out_json: Path) -> list[dict]:
+    if not out_json.is_file():
+        return []
+    try:
+        data = json.loads(out_json.read_text(encoding="utf-8"))
+        raw = data.get("slides", data) if isinstance(data, dict) else data
+        if not isinstance(raw, list):
+            return []
+        for i, row in enumerate(raw, start=1):
+            if not isinstance(row, dict) or row.get("slide_index") != i:
+                logger.warning(
+                    "Checkpoint %s has bad slide_index; ignoring checkpoint.",
+                    out_json.name,
+                )
+                return []
+        return raw
+    except (json.JSONDecodeError, OSError) as e:
+        logger.warning("Could not read %s (%s); starting descriptions from scratch.", out_json, e)
+        return []
+
+
 def run_slide_descriptions(
     image_paths: list[Path],
     out_json: Path,
@@ -30,13 +59,24 @@ def run_slide_descriptions(
     *,
     force: bool = False,
 ) -> list[dict]:
-    if out_json.is_file() and not force:
-        data = json.loads(out_json.read_text(encoding="utf-8"))
-        return data.get("slides", data) if isinstance(data, dict) else data
-
-    slides: list[dict] = []
     total = len(image_paths)
-    for idx, img in enumerate(image_paths, start=1):
+    if out_json.is_file() and not force:
+        slides = _load_existing_slides(out_json)
+        if len(slides) >= total:
+            logger.info("Using complete %s (%s slides).", out_json.name, total)
+            return slides
+        if slides:
+            logger.info(
+                "Resuming slide descriptions: %s slides done, continuing at %s/%s",
+                len(slides),
+                len(slides) + 1,
+                total,
+            )
+    else:
+        slides = []
+
+    for idx in range(len(slides) + 1, total + 1):
+        img = image_paths[idx - 1]
         # Rubric: every call must include *all* prior slide descriptions in context (real chaining).
         prev = list(slides)
         prev_block = (
@@ -54,9 +94,8 @@ def run_slide_descriptions(
         row.setdefault("slide_index", idx)
         row["image_file"] = img.name
         slides.append(row)
-        logger.info("Described slide %s/%s", idx, total)
+        _write_slide_checkpoint(out_json, slides)
+        logger.info("Described slide %s/%s (checkpoint saved)", idx, total)
 
-    payload = {"slides": slides}
-    out_json.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     logger.info("Wrote %s", out_json)
     return slides
