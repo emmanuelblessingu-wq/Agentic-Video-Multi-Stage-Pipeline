@@ -17,7 +17,8 @@ class PipelineConfig:
     def from_env(cls) -> "PipelineConfig":
         key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY") or ""
         eleven = os.environ.get("ELEVENLABS_API_KEY") or None
-        agent_model = os.environ.get("GEMINI_AGENT_MODEL", "gemini-2.0-flash")
+        # gemini-2.0-flash may return 404 for new API projects; use a current default.
+        agent_model = os.environ.get("GEMINI_AGENT_MODEL", "gemini-2.5-flash")
         tts = (os.environ.get("LECTURE_TTS", "auto") or "auto").lower()
         return cls(
             google_api_key=key,

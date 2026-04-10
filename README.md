@@ -46,7 +46,7 @@ pip install -r requirements.txt
 | Variable | Purpose |
 |----------|---------|
 | `GOOGLE_API_KEY` or `GEMINI_API_KEY` | Required for all Gemini agent steps |
-| `GEMINI_AGENT_MODEL` | Optional; default `gemini-2.0-flash` |
+| `GEMINI_AGENT_MODEL` | Optional; default `gemini-2.5-flash` (override if Google renames models) |
 | `LECTURE_TTS` | `auto` (default), `gemini`, `elevenlabs`, or `edge` |
 | `ELEVENLABS_API_KEY` | If set, `auto` usually prefers ElevenLabs |
 | `GEMINI_TTS_MODEL` | Optional Gemini TTS model override |
