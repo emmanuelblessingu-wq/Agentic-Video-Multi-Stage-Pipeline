@@ -47,6 +47,8 @@ pip install -r requirements.txt
 |----------|---------|
 | `GOOGLE_API_KEY` or `GEMINI_API_KEY` | Required for all Gemini agent steps |
 | `GEMINI_AGENT_MODEL` | Optional; default `gemini-2.5-flash` (override if Google renames models) |
+| `GEMINI_MAX_RETRIES` | Optional; default `12` — retries on HTTP 408/429/5xx (e.g. 503 overload) |
+| `GEMINI_RETRY_BASE_SEC` | Optional; default `4` — base seconds for exponential backoff (capped at 120s) |
 | `LECTURE_TTS` | `auto` (default), `gemini`, `elevenlabs`, or `edge` |
 | `ELEVENLABS_API_KEY` | If set, `auto` usually prefers ElevenLabs |
 | `GEMINI_TTS_MODEL` | Optional Gemini TTS model override |

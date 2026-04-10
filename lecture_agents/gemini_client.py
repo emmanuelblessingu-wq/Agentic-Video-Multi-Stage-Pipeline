@@ -4,12 +4,18 @@ from __future__ import annotations
 
 import json
 import logging
+import os
+import time
 from pathlib import Path
 
 from google import genai
+from google.genai import errors as genai_errors
 from google.genai import types
 
 logger = logging.getLogger(__name__)
+
+# Transient overload / rate / gateway issues (e.g. 503 UNAVAILABLE).
+_RETRYABLE_HTTP = frozenset({408, 429, 500, 502, 503, 504})
 
 
 class GeminiClient:
@@ -19,13 +25,37 @@ class GeminiClient:
         self._client = genai.Client(api_key=api_key)
         self._model = model
 
+    def _generate_with_retry(self, **kwargs):
+        max_attempts = max(1, int(os.environ.get("GEMINI_MAX_RETRIES", "12")))
+        base_sec = float(os.environ.get("GEMINI_RETRY_BASE_SEC", "4"))
+        last_err: BaseException | None = None
+        for attempt in range(max_attempts):
+            try:
+                return self._client.models.generate_content(**kwargs)
+            except genai_errors.APIError as e:
+                last_err = e
+                if e.code not in _RETRYABLE_HTTP or attempt >= max_attempts - 1:
+                    raise
+                delay = min(120.0, base_sec * (2**attempt))
+                logger.warning(
+                    "Gemini HTTP %s (%s); waiting %.0fs then retry %s/%s",
+                    e.code,
+                    (e.message or str(e))[:120],
+                    delay,
+                    attempt + 2,
+                    max_attempts,
+                )
+                time.sleep(delay)
+        assert last_err is not None
+        raise last_err
+
     def generate_json(self, prompt: str, *, system: str | None = None) -> dict:
         """Single-turn JSON response from text only."""
         config = types.GenerateContentConfig(
             response_mime_type="application/json",
             system_instruction=system if system else None,
         )
-        response = self._client.models.generate_content(
+        response = self._generate_with_retry(
             model=self._model,
             contents=prompt,
             config=config,
@@ -51,7 +81,7 @@ class GeminiClient:
             response_mime_type="application/json",
             system_instruction=system if system else None,
         )
-        response = self._client.models.generate_content(
+        response = self._generate_with_retry(
             model=self._model,
             contents=[user_content],
             config=config,
@@ -62,7 +92,7 @@ class GeminiClient:
         config = types.GenerateContentConfig(
             system_instruction=system if system else None,
         )
-        response = self._client.models.generate_content(
+        response = self._generate_with_retry(
             model=self._model,
             contents=prompt,
             config=config,
