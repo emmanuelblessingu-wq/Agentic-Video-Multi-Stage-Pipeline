@@ -4,11 +4,24 @@ from __future__ import annotations
 
 import json
 import logging
+import os
+import time
 from pathlib import Path
 
 from lecture_agents.gemini_client import GeminiClient
 
 logger = logging.getLogger(__name__)
+
+
+def _pause_between_slides() -> None:
+    raw = os.environ.get("GEMINI_PAUSE_BETWEEN_SLIDES_SEC", "0") or "0"
+    try:
+        sec = float(raw)
+    except ValueError:
+        return
+    if sec > 0:
+        time.sleep(sec)
+
 
 SYSTEM = """You write spoken lecture narration for a single slide.
 Match the instructor style profile, premise, and arc. Be natural for text-to-speech: avoid markdown, avoid excessive abbreviations, use commas for short pauses.
@@ -146,6 +159,7 @@ def run_narrations(
         narrations.append(row)
         _write_narration_checkpoint(out_path, narrations)
         logger.info("Narration slide %s/%s (checkpoint saved)", idx, total)
+        _pause_between_slides()
 
     logger.info("Wrote %s", out_path)
     return narrations

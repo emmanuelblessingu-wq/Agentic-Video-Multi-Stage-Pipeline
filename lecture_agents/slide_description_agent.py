@@ -4,11 +4,25 @@ from __future__ import annotations
 
 import json
 import logging
+import os
+import time
 from pathlib import Path
 
 from lecture_agents.gemini_client import GeminiClient
 
 logger = logging.getLogger(__name__)
+
+
+def _pause_between_slides() -> None:
+    """Optional throttle: set GEMINI_PAUSE_BETWEEN_SLIDES_SEC=2 (or similar) to space out requests."""
+    raw = os.environ.get("GEMINI_PAUSE_BETWEEN_SLIDES_SEC", "0") or "0"
+    try:
+        sec = float(raw)
+    except ValueError:
+        return
+    if sec > 0:
+        time.sleep(sec)
+
 
 SYSTEM = """You describe lecture slides for accessibility and narration planning.
 Be accurate to visible text and layout; note diagrams, bullets, and emphasis.
@@ -96,6 +110,7 @@ def run_slide_descriptions(
         slides.append(row)
         _write_slide_checkpoint(out_json, slides)
         logger.info("Described slide %s/%s (checkpoint saved)", idx, total)
+        _pause_between_slides()
 
     logger.info("Wrote %s", out_json)
     return slides

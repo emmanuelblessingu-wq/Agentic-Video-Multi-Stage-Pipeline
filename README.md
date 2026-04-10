@@ -49,12 +49,15 @@ pip install -r requirements.txt
 | `GEMINI_AGENT_MODEL` | Optional; default `gemini-2.5-flash` (override if Google renames models) |
 | `GEMINI_MAX_RETRIES` | Optional; default `12` — retries on HTTP 408/429/5xx (e.g. 503 overload) |
 | `GEMINI_RETRY_BASE_SEC` | Optional; default `4` — base seconds for exponential backoff (capped at 120s) |
+| `GEMINI_PAUSE_BETWEEN_SLIDES_SEC` | Optional; default `0` — e.g. `2` or `5` to **wait between slides** and reduce burst traffic (503s) |
 | `LECTURE_TTS` | `auto` (default), `gemini`, `elevenlabs`, or `edge` |
 | `ELEVENLABS_API_KEY` | If set, `auto` usually prefers ElevenLabs |
 | `GEMINI_TTS_MODEL` | Optional Gemini TTS model override |
 | `EDGE_TTS_VOICE` | Optional Edge TTS voice (default `en-US-GuyNeural`) |
 
 **TTS behavior:** `auto` prefers ElevenLabs when a key is set; otherwise tries **Gemini TTS** (may require a supported model/account) and falls back to **Microsoft Edge TTS** (no API key, network required).
+
+**Easing Gemini load (503 / “high demand”):** use a lighter model (`GEMINI_AGENT_MODEL=gemini-2.5-flash-lite` or `gemini-1.5-flash`), add **`GEMINI_PAUSE_BETWEEN_SLIDES_SEC=3`** between slides, raise **`GEMINI_MAX_RETRIES`**, and run at off-peak times. Paid Google AI / higher quotas can also help.
 
 ## Run
 
