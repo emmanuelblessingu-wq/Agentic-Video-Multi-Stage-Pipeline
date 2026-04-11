@@ -83,7 +83,7 @@ Useful flags:
 - `--skip-video` — generate MP3s only
 - `--skip-rasterize` — reuse existing `slide_images/slide_XXX.png` (must match PDF page count); skips re-exporting PNGs on each retry
 - `--assemble-video-only` — rebuild the final `.mp4` from existing `slide_images/` + `audio/` only (needs `--project-dir`). Use after fixing ffmpeg concat if audio was missing mid-video.
-- Final concat **re-encodes** by default (not stream-copy) so audio plays for every slide; set `FFMPEG_CONCAT_COPY=1` only if you want the old fast path.
+- Final join uses **filter_complex concat** by default (reliable picture + sound in QuickTime). Set `FFMPEG_CONCAT_COPY=1` only for fast stream-copy if segments are known-good.
 - `--tts-engine edge` — force free Edge TTS
 - `--force-narration`, `--force-slides`, etc. — regenerate specific stages
 
