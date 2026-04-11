@@ -118,10 +118,41 @@ class GeminiClient:
                         raw = p.text
                         break
         try:
-            return json.loads(raw)
+            parsed = json.loads(raw)
         except json.JSONDecodeError:
             start, end = raw.find("{"), raw.rfind("}")
             if start != -1 and end != -1 and end > start:
-                return json.loads(raw[start : end + 1])
-            logger.error("Failed to parse JSON from model: %s", raw[:500])
-            raise
+                parsed = json.loads(raw[start : end + 1])
+            else:
+                logger.error("Failed to parse JSON from model: %s", raw[:500])
+                raise
+        return GeminiClient._coerce_json_to_dict(parsed)
+
+    @staticmethod
+    def _coerce_json_to_dict(parsed: object) -> dict:
+        """Gemini sometimes returns a one-element JSON array instead of an object."""
+        if isinstance(parsed, dict):
+            slides = parsed.get("slides")
+            if (
+                len(parsed) == 1
+                and isinstance(slides, list)
+                and len(slides) == 1
+                and isinstance(slides[0], dict)
+            ):
+                # Model wrapped the slide row as {"slides": [{...}]}
+                return slides[0]
+            return parsed
+        if isinstance(parsed, list):
+            if not parsed:
+                raise ValueError("Model returned an empty JSON array.")
+            if not isinstance(parsed[0], dict):
+                raise ValueError(
+                    f"Model JSON array must contain objects; got {type(parsed[0]).__name__}.",
+                )
+            if len(parsed) > 1:
+                logger.warning(
+                    "Model returned a JSON array with %s elements; using the first object.",
+                    len(parsed),
+                )
+            return parsed[0]
+        raise ValueError(f"Expected JSON object or [...] object list; got {type(parsed).__name__}.")
