@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import subprocess
 from pathlib import Path
 
@@ -48,7 +49,13 @@ def mux_slide(image: Path, audio: Path, segment_out: Path) -> None:
 
 
 def concat_segments(segment_paths: list[Path], final_mp4: Path, *, cwd: Path) -> None:
-    """Write concat list with paths relative to cwd so ffmpeg resolves segments reliably."""
+    """Concat segment MP4s into one file.
+
+    Default: **re-encode** video+audio so every segment's AAC matches; ``-c copy`` often
+    drops audio after the first part when priming/timestamps differ (e.g. silent middle slides).
+
+    Set ``FFMPEG_CONCAT_COPY=1`` for fast stream-copy (only if you know segments match).
+    """
     final_mp4.parent.mkdir(parents=True, exist_ok=True)
     list_path = cwd / "_concat_list.txt"
     lines: list[str] = []
@@ -56,23 +63,56 @@ def concat_segments(segment_paths: list[Path], final_mp4: Path, *, cwd: Path) ->
         rel = p.relative_to(cwd)
         lines.append(f"file '{rel.as_posix()}'")
     list_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    ff = ffmpeg_executable()
+    use_copy = os.environ.get("FFMPEG_CONCAT_COPY", "").strip() in ("1", "true", "yes")
     try:
-        _run(
-            [
-                ffmpeg_executable(),
-                "-y",
-                "-f",
-                "concat",
-                "-safe",
-                "0",
-                "-i",
-                list_path.as_posix(),
-                "-c",
-                "copy",
-                final_mp4.as_posix(),
-            ],
-            cwd=cwd,
-        )
+        if use_copy:
+            _run(
+                [
+                    ff,
+                    "-y",
+                    "-f",
+                    "concat",
+                    "-safe",
+                    "0",
+                    "-i",
+                    list_path.as_posix(),
+                    "-c",
+                    "copy",
+                    final_mp4.as_posix(),
+                ],
+                cwd=cwd,
+            )
+        else:
+            _run(
+                [
+                    ff,
+                    "-y",
+                    "-f",
+                    "concat",
+                    "-safe",
+                    "0",
+                    "-i",
+                    list_path.as_posix(),
+                    "-c:v",
+                    "libx264",
+                    "-pix_fmt",
+                    "yuv420p",
+                    "-preset",
+                    "fast",
+                    "-crf",
+                    "23",
+                    "-c:a",
+                    "aac",
+                    "-b:a",
+                    "192k",
+                    "-movflags",
+                    "+faststart",
+                    final_mp4.as_posix(),
+                ],
+                cwd=cwd,
+            )
+            logger.info("Final concat re-encoded (fixes missing audio mid-video vs -c copy).")
     finally:
         list_path.unlink(missing_ok=True)
 

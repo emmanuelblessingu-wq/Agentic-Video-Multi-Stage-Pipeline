@@ -89,6 +89,11 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Do not re-render PDF; require slide_001.png… under project slide_images/ matching PDF page count.",
     )
+    p.add_argument(
+        "--assemble-video-only",
+        action="store_true",
+        help="Only mux+concat from existing slide_images/ and audio/ (requires --project-dir). Skips all AI/TTS.",
+    )
     p.add_argument("-v", "--verbose", action="store_true")
     return p.parse_args(argv)
 
@@ -99,6 +104,31 @@ def main(argv: list[str] | None = None) -> int:
 
     if load_dotenv is not None:
         load_dotenv(REPO_ROOT / ".env")
+
+    if args.assemble_video_only:
+        if args.project_dir is None:
+            logging.error("--assemble-video-only requires --project-dir")
+            return 1
+        pdf = args.pdf.resolve()
+        if not pdf.is_file():
+            logging.error("PDF not found: %s", pdf)
+            return 1
+        project_dir = args.project_dir.resolve()
+        slide_img_dir = project_dir / "slide_images"
+        audio_dir = project_dir / "audio"
+        try:
+            image_paths = load_existing_slide_images(slide_img_dir, pdf)
+        except FileNotFoundError as e:
+            logging.error("%s", e)
+            return 1
+        audio_paths = sorted(audio_dir.glob("slide_*.mp3"))
+        if len(audio_paths) != len(image_paths):
+            logging.error("Expected %s MP3s, found %s", len(image_paths), len(audio_paths))
+            return 1
+        _require_ffmpeg()
+        assemble_video(image_paths, audio_paths, pdf.stem, project_dir)
+        logging.info("Done. Video: %s", project_dir / f"{pdf.stem}.mp4")
+        return 0
 
     cfg = PipelineConfig.from_env()
     if args.tts_engine:
