@@ -5,7 +5,7 @@ Python pipeline that turns a PDF slide deck into one narrated `.mp4`: rasterized
 ## Prerequisites
 
 - **Python 3.10+** (tested with 3.10–3.12; newer versions may work)
-- **ffmpeg** on your `PATH` (required for MP3 conversion from Gemini TTS WAV and for final video)
+- **ffmpeg** on your `PATH`, **or** install deps with `pip install -r requirements.txt` (includes **`imageio-ffmpeg`**, which provides a bundled ffmpeg if you don’t use Homebrew)
 - **Google AI API key** for Gemini (agents use vision + JSON): set `GOOGLE_API_KEY` or `GEMINI_API_KEY`
 - Optional: **ElevenLabs** API key (`ELEVENLABS_API_KEY`) for higher-quality TTS; optional voice id `ELEVENLABS_VOICE_ID`
 
@@ -81,6 +81,7 @@ Useful flags:
 - `--project-dir path` — reuse an existing project folder (required to **resume** after a crash or 503: slide descriptions and narrations are **checkpointed** to JSON after each slide)
 - `--skip-tts` — stop after `slide_description_narration.json`
 - `--skip-video` — generate MP3s only
+- `--skip-rasterize` — reuse existing `slide_images/slide_XXX.png` (must match PDF page count); skips re-exporting PNGs on each retry
 - `--tts-engine edge` — force free Edge TTS
 - `--force-narration`, `--force-slides`, etc. — regenerate specific stages
 

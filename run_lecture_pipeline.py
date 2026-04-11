@@ -3,8 +3,9 @@
 Entry point: transcript → style.json; PDF → slide images → descriptions → premise → arc
 → narrations → TTS → ffmpeg → one MP4.
 
-Run from repository root. Requires GOOGLE_API_KEY (or GEMINI_API_KEY), ffmpeg on PATH,
-and a lecture transcript for style extraction. Place Lecture_17_AI_screenplays.pdf in
+Run from repository root. Requires GOOGLE_API_KEY (or GEMINI_API_KEY). Video/TTS WAV→MP3
+need ffmpeg (system PATH or via `pip install imageio-ffmpeg`). Lecture transcript for
+style extraction if style.json missing. Place Lecture_17_AI_screenplays.pdf in
 the repo root (or pass --pdf).
 """
 
@@ -25,7 +26,7 @@ from lecture_agents.arc_agent import run_arc
 from lecture_agents.config import PipelineConfig
 from lecture_agents.gemini_client import GeminiClient
 from lecture_agents.narration_agent import run_narrations
-from lecture_agents.pdf_rasterize import rasterize_pdf
+from lecture_agents.pdf_rasterize import load_existing_slide_images, rasterize_pdf
 from lecture_agents.premise_agent import run_premise
 from lecture_agents.slide_description_agent import run_slide_descriptions
 from lecture_agents.style_agent import build_style_json, load_or_build_style
@@ -44,10 +45,9 @@ def _setup_logging(verbose: bool) -> None:
 
 
 def _require_ffmpeg() -> None:
-    import shutil
+    from lecture_agents.ffmpeg_paths import ffmpeg_executable
 
-    if not shutil.which("ffmpeg"):
-        raise RuntimeError("ffmpeg not found on PATH. Install ffmpeg to build video output.")
+    ffmpeg_executable()  # raises with install hints if missing
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -84,6 +84,11 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--force-tts", action="store_true", help="Regenerate all slide MP3s.")
     p.add_argument("--skip-video", action="store_true", help="Stop after TTS (no ffmpeg).")
     p.add_argument("--skip-tts", action="store_true", help="Stop after narration JSON.")
+    p.add_argument(
+        "--skip-rasterize",
+        action="store_true",
+        help="Do not re-render PDF; require slide_001.png… under project slide_images/ matching PDF page count.",
+    )
     p.add_argument("-v", "--verbose", action="store_true")
     return p.parse_args(argv)
 
@@ -141,7 +146,14 @@ def main(argv: list[str] | None = None) -> int:
 
     logging.info("Project directory: %s", project_dir)
 
-    image_paths = rasterize_pdf(pdf, slide_img_dir)
+    try:
+        if args.skip_rasterize:
+            image_paths = load_existing_slide_images(slide_img_dir, pdf)
+        else:
+            image_paths = rasterize_pdf(pdf, slide_img_dir)
+    except FileNotFoundError as e:
+        logging.error("%s", e)
+        return 1
     slide_desc_path = project_dir / "slide_description.json"
     run_slide_descriptions(
         image_paths,

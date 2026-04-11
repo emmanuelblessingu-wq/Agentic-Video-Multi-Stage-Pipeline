@@ -13,6 +13,7 @@ from google import genai
 from google.genai import types
 
 from lecture_agents.config import PipelineConfig
+from lecture_agents.ffmpeg_paths import ffmpeg_executable
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 def _wav_to_mp3(wav_path: Path, mp3_path: Path) -> None:
     subprocess.run(
         [
-            "ffmpeg",
+            ffmpeg_executable(),
             "-y",
             "-i",
             wav_path.as_posix(),

@@ -6,6 +6,8 @@ import logging
 import subprocess
 from pathlib import Path
 
+from lecture_agents.ffmpeg_paths import ffmpeg_executable
+
 logger = logging.getLogger(__name__)
 
 
@@ -19,8 +21,9 @@ def _run(cmd: list[str], *, cwd: Path | None = None) -> None:
 def mux_slide(image: Path, audio: Path, segment_out: Path) -> None:
     """Still image + audio; `-shortest` ends the segment when audio ends (no long silent tail)."""
     segment_out.parent.mkdir(parents=True, exist_ok=True)
+    ff = ffmpeg_executable()
     cmd = [
-        "ffmpeg",
+        ff,
         "-y",
         "-loop",
         "1",
@@ -56,7 +59,7 @@ def concat_segments(segment_paths: list[Path], final_mp4: Path, *, cwd: Path) ->
     try:
         _run(
             [
-                "ffmpeg",
+                ffmpeg_executable(),
                 "-y",
                 "-f",
                 "concat",
